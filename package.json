@@ -5,24 +5,30 @@
   "author": "Mewes Kochheim",
   "license": "MIT",
   "private": false,
+  "dependencies": {
+    "core-js": "^3.17.3"
+  },
   "devDependencies": {
-    "@babel/cli": "^7.1.5",
-    "@babel/core": "^7.1.6",
-    "@babel/preset-env": "^7.1.6",
-    "babel-jest": "^23.6.0",
-    "jest": "^23.6.0"
+    "@babel/cli": "^7.15.4",
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.4",
+    "@jest/globals": "^27.1.1",
+    "babel-jest": "^27.1.1",
+    "jest": "^27.1.1"
   },
   "scripts": {
     "build": "babel src --out-dir lib",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "test": "jest"
-  },
-  "dependencies": {
-    "@babel/polyfill": "^7.0.0"
   },
   "main": "lib/proper-encode-uri.js",
   "files": [
     "lib",
+    "src",
     "LICENSE.md"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/develop4edu/proper-encode-uri.git"
+  }
 }

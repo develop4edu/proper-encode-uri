@@ -1,7 +1,7 @@
 /**
  * Encodes an URI based on RFC3986 and RFC5987.
  *
- * @param uri
+ * @param {string} uri
  * @returns {string}
  */
 function properEncodeURI(uri) {
@@ -44,7 +44,7 @@ function properEncodeURI(uri) {
 /**
  * Encodes an URI component based on RFC3986 and RFC5987.
  *
- * @param uriComponent
+ * @param {string} uriComponent
  * @returns {string}
  */
 function properEncodeURIComponent(uriComponent) {
@@ -72,25 +72,25 @@ function properEncodeURIComponent(uriComponent) {
 /**
  * Encodes all characters of the given value except the given exceptions.
  *
- * @param value
- * @param exceptions
+ * @param {string} value
+ * @param {RegExp[]} exceptions
  * @returns {string}
  */
 function properEncode(value, exceptions) {
-    if (value === null) {
+    if (value === null || value === undefined || value === '') {
         return '';
     }
 
     let result = '';
-    for (let i = 0; i < value.length; i++) {
+    for (let i = 0, n1 = value.length; i < n1; i++) {
         // Extract character (add surrogate partner if necessary)
         const charCode = value.charCodeAt(i);
         const char = charCode >= 0xd800 && charCode < 0xe000 ? value.charAt(i) + value.charAt(++i) : value.charAt(i);
 
         // Check for exceptions
         let isException = false;
-        for (let j = 0; j < exceptions.length; j++) {
-            if (char.match(exceptions[j])) {
+        for (let j = 0, n2 = exceptions.length; j < n2; j++) {
+            if (exceptions[j].test(char)) {
                 isException = true;
                 break;
             }
@@ -115,7 +115,7 @@ function properEncode(value, exceptions) {
 /**
  * Converts a given byte into an hex string.
  *
- * @param byte
+ * @param {number} byte
  * @returns {string}
  */
 function toHexString(byte) {
@@ -125,8 +125,8 @@ function toHexString(byte) {
 /**
  * Converts a given character into an UTF-8 byte array.
  *
- * @param character May be 1 or 2 UTF-16 characters long.
- * @returns {Array} May have 1 to 4 bytes.
+ * @param {string} character May be 1 or 2 UTF-16 characters long.
+ * @returns {number[]} May have 1 to 4 bytes.
  */
 function toUTF8ByteArray(character) {
     let charCode = character.charCodeAt(0);
@@ -165,4 +165,4 @@ function toUTF8ByteArray(character) {
     }
 }
 
-module.exports = {properEncodeURI, properEncodeURIComponent};
+export {properEncodeURI, properEncodeURIComponent};

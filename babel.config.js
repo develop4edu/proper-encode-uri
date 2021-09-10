@@ -1,10 +1,11 @@
-const presets = [
-    [
-        "@babel/env",
-        {
-            useBuiltIns: "usage",
-        },
-    ],
-];
-
-module.exports = { presets };
+module.exports = {
+    presets: [
+        [
+            "@babel/env",
+            {
+                useBuiltIns: "usage",
+                corejs: "3.17"
+            },
+        ],
+    ]
+};

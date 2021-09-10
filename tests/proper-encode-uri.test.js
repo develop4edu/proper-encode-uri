@@ -1,4 +1,5 @@
-const {properEncodeURI, properEncodeURIComponent} = require('../src/proper-encode-uri');
+import {expect, test} from '@jest/globals'
+import {properEncodeURI, properEncodeURIComponent} from '../src/proper-encode-uri';
 
 test('Test properEncodeURI', () => {
     expect(properEncodeURI('https://www.example.com/')).toBe('https://www.example.com/');
@@ -36,7 +37,7 @@ test('Test properEncodeURI (multi byte characters)', () => {
 });
 
 test('Test properEncodeURI (character exceptions)', () => {
-    testAllCharacters(
+    testAgainstAllUnicodeCharacters(
         [
             // Reserved (gen-delims)
             /:/,
@@ -100,8 +101,8 @@ test('Test properEncodeURIComponent (multi byte characters)', () => {
     expect(properEncodeURIComponent('💩')).toBe('%F0%9F%92%A9');
 });
 
-test('Test properEncodeURIComponent (character exceptions)', () => {
-    testAllCharacters(
+test('Test properEncodeURIComponent (reserved characters should not be encoded but stay the same)', () => {
+    testAgainstAllUnicodeCharacters(
         [
             // Reserved (sub-delims)
             /!/,
@@ -127,29 +128,60 @@ test('Test properEncodeURIComponent (character exceptions)', () => {
  * Test all Unicode characters against the given handlers. If the characters is included in reservedCharacters the
  * exceptionHandler is used, otherwise the defaultHandler.
  *
- * @param reservedCharacters
- * @param defaultHandler
- * @param exceptionHandler
+ * @param {RegExp[]} reservedCharacters
+ * @param {function} defaultHandler
+ * @param {function} exceptionHandler
  */
-function testAllCharacters(reservedCharacters, defaultHandler, exceptionHandler) {
-    // Unicode characters are between 0x000000 and 0x10FFFF
-    for (let i = 0; i < 0x110000; i++) {
-        const unicodeCharacter = String.fromCharCode(i);
+async function testAgainstAllUnicodeCharacters(reservedCharacters, defaultHandler, exceptionHandler) {
+    const checkUnicodeRange = (from, to) => {
+        return new Promise((resolve) => {
+            for (let i = from; i < to; i++) {
+                const unicodeCharacter = String.fromCharCode(i);
 
-        // Check for exceptions
-        let isException = false;
-        for (let j = 0; j < reservedCharacters.length; j++) {
-            if (unicodeCharacter.match(reservedCharacters[j])) {
-                isException = true;
-                break;
+                // Check for exceptions
+                let isException = false;
+                for (let j = 0, n = reservedCharacters.length; j < n; j++) {
+                    if (reservedCharacters[j].test(unicodeCharacter)) {
+                        isException = true;
+                        break;
+                    }
+                }
+
+                // Call handler
+                if (isException) {
+                    exceptionHandler(unicodeCharacter);
+                } else {
+                    defaultHandler(unicodeCharacter);
+                }
             }
-        }
 
-        // Call handler
-        if (isException) {
-            exceptionHandler(unicodeCharacter);
-        } else {
-            defaultHandler(unicodeCharacter);
-        }
-    }
+            // Resolve promise
+            resolve();
+        });
+    };
+
+    // The planes are based on the current Unicode 13.0 definition
+    // We test from the lowest to the highest used block, even if that includes undefined blocks.
+    await Promise.all([
+        // Basic Multilingual Plane (Plane 0)
+        checkUnicodeRange(0x0000, 0xFFFF),
+
+        // Supplementary Multilingual Plane (Plane 1)
+        checkUnicodeRange(0x10000, 0x1FBFF),
+
+        // Supplementary Ideographic Plane (Plane 2)
+        checkUnicodeRange(0x20000, 0x2FA1F),
+
+        // Tertiary Ideographic Plane (Plane 3)
+        checkUnicodeRange(0x30000, 0x3134F),
+
+        // Supplementary Special-purpose Plane (Plane 14)
+        checkUnicodeRange(0xE0000, 0xE01EF),
+
+        // Supplementary Private Use Area-A (Plane 15)
+        checkUnicodeRange(0xF0000, 0xFFFFF),
+
+        // Supplementary Private Use Area-B (Plane 16)
+        checkUnicodeRange(0x100000, 0x10FFFF),
+    ]);
 }
